@@ -21,6 +21,7 @@ dist/
 
 # Virtual environment
 .env
+.price-sentinel-local/
 .venv/
 venv/
 

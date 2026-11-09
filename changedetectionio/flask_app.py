@@ -1452,6 +1452,10 @@ def changedetection_app(config=None, datastore_o=None):
         url_prefix='',
     )
 
+    # 中文价格工作台复用原有采集、通知、登录和 CSRF 保护。
+    from changedetectionio.blueprint.price_sentinel import construct_blueprint as price_sentinel_blueprint
+    app.register_blueprint(price_sentinel_blueprint(datastore, update_q), url_prefix='/prices')
+
     # After the built-in blueprints, so a plugin can't take over a core blueprint name
     from changedetectionio.pluggy_interface import register_plugin_blueprints
 

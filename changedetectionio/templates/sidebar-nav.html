@@ -18,6 +18,12 @@
           </a>
         {%- endif -%}
     </li>
+    <li class="action-sidebar-li">
+        <a href="{{ url_for('price_sentinel.index') }}" class="action-sidebar-item {% if ep.startswith('price_sentinel.') %}active{% endif %}" title="价格哨兵">
+            <i data-feather="trending-down" class="action-icon"></i>
+            <span class="action-label">价格哨兵</span>
+        </a>
+    </li>
     {# Add-Watch needs a browser that can render a live preview (see the add_watch_ui
        blueprint's browser_config) - without one the page can only fail, so don't offer it #}
     {%- if has_visual_browser -%}

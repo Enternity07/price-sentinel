@@ -1,3 +1,91 @@
+# 价格哨兵 · Price Sentinel
+
+基于 [changedetection.io](https://github.com/dgtlmoon/changedetection.io) 的中文商品价格监控改版。
+
+**关注商品、记录价格变化、设置目标价，在需要时收到提醒。** 原有采集、浏览器、通知和持久化引擎保留，新增独立的价格工作台，不另起第二套调度器。
+
+![价格哨兵桌面工作台，图中为明确标注的演示数据](docs/price-sentinel-desktop.jpg)
+
+## 这个改版增加了什么
+
+- 中文响应式工作台：商品总览、降价筛选、到价筛选、异常筛选和搜索。
+- 添加固定规格商品，选择普通网页或已配置的浏览器渲染，设置检查间隔。
+- 三种提醒规则：所有价格变化、低于目标价、相较上次有效价波动超过百分比；恢复有货提醒默认启用。
+- 价格变化快照图、7/30/90 天与全部范围、CSV 导出。
+- 暂停、恢复、立即排队检查和删除商品；不操作其它类型的网页监控。
+- 沿用原有登录与 CSRF；前端不接触采集引擎 API Key。
+- 只读演示模式，不把示例价格混入真实记录。
+
+## Windows 本地运行
+
+需要 Python 3.11 或以上版本；本轮在 Windows / Python 3.14.5 上验证。
+
+```powershell
+git clone https://github.com/Enternity07/price-sentinel.git
+cd price-sentinel
+py -3 -m venv .venv
+.\.venv\Scripts\python.exe -m pip install -r requirements.txt
+.\.venv\Scripts\python.exe changedetection.py -C -d datastore -h 127.0.0.1 -p 5080
+```
+
+打开 **http://127.0.0.1:5080/prices/**。原有完整引擎仍在根地址 `/`，新增入口也可从原侧栏进入。
+
+演示界面：**http://127.0.0.1:5080/prices/?demo=1**。演示商品和价格为虚构样例，不启动监控、不发送通知。
+
+Linux/macOS 使用 `python3 -m venv .venv`，后续将解释器路径替换为 `.venv/bin/python`。
+
+## Docker Compose
+
+```bash
+docker compose -f compose.price-sentinel.yml up -d --build
+```
+
+该配置从本仓库源码构建，包含改版代码；不是直接运行未改造的上游镜像。默认仅绑定本机 `127.0.0.1:5080`，监控数据保存在命名卷。Docker 构建在本轮环境尚未执行。
+
+## 怎样收到提醒
+
+1. 从工作台进入“采集引擎设置”。
+2. 在原引擎“设置 → 通知”中配置邮件、Webhook 或其它支持的渠道，并发送测试通知。
+3. 添加商品并选择提醒规则。首次采集建立基线，后续变化按规则触发。
+
+提醒复用上游 Apprise。仓库没有内置收件人、邮箱密码、Webhook 密钥或大模型 API Key；工作台自身不调用大模型。
+
+## 价格与历史口径
+
+- 追踪的是页面可提取的公开标价，不自动推导券后价、会员价、运费或结算优惠。
+- 使用固定规格、店铺、地区与币种的链接。通用商品价格提取不等于已适配全部电商平台。
+- 采集失败保留上次有效价格并标记异常，不以零元代替，不计入已到目标商品。
+- “最近变动”相较最近一次实际变价前的价格，不代表今日涨跌或加入监控以来的累计变化。
+- “低于目标价”为严格低于；“波动超过阈值”为绝对涨跌幅严格超过，相较上次有效检查价。
+- 历史来自加入监控后保存的变化快照，不是全网历史价，也不代表每轮检查都留快照。
+- 每次最多返回所选范围中最近 500 条历史；原始旧快照不含币种，导出中明确保留此边界。
+
+## 验证
+
+```bash
+python -m pytest price_sentinel_tests -q
+node --check changedetectionio/static/js/price-sentinel.js
+```
+
+本轮本地结果：**41 项测试通过**，覆盖金额校验、规则转换、真实应用接口、CSRF、登录、非商品监控隔离、历史与 CSV。接口测试隔离了外部排队采集动作。
+
+另有真实采集冒烟脚本，使用临时本地商品页验证 `120 → 89.9 → HTTP 403 → 119.9`、到价状态、错误价格保留和稳定价格不新增变化快照。仅在独立的本机测试实例上使用；该实例需显式设置上游的本地地址测试开关，正常使用无需开启。
+
+```bash
+python scripts/smoke_price_sentinel.py --base-url http://127.0.0.1:5080
+```
+
+特定真实电商站点、浏览器渲染、外部通知渠道和 Docker 构建仍需按部署环境验证。详细改造与口径见 [改造记录](docs/PRICE_SENTINEL.md)。
+
+## 上游归属与许可
+
+本项目是上游 Fork，保留 changedetection.io 原有版权、[Apache-2.0 许可](LICENSE) 与 [NOTICE](NOTICE)。固定改造基线为 `e01f96535378e364d8aea61488cb92e30d0ae666`；新增部分为价格工作台、专用接口、数值摘要、测试和中文文档。
+
+---
+
+<details>
+<summary>展开上游原始项目说明</summary>
+
 [<img src="./docs/banner-wide.png" style="max-width:100%;" alt="AI LLM Web site page change monitoring"  title="AI LLM Web site page change monitoring"  />](https://changedetection.io?src=github)
 
 # Detect Website Changes Automatically — Monitor Web Page Changes in Real Time
@@ -351,3 +439,5 @@ See [docs/THIRD-PARTY-LICENSES.md](docs/THIRD-PARTY-LICENSES.md) for every bundl
 <a href="https://github.com/dgtlmoon/changedetection.io/graphs/contributors">
   <img src="https://contrib.rocks/image?repo=dgtlmoon/changedetection.io&max=300&columns=20" alt="changedetection.io contributors" />
 </a>
+
+</details>

@@ -1,0 +1,31 @@
+name: Price Sentinel
+
+on:
+  push:
+    branches: ["codex/price-sentinel"]
+  pull_request:
+    paths:
+      - "changedetectionio/blueprint/price_sentinel/**"
+      - "changedetectionio/static/js/price-sentinel.js"
+      - "changedetectionio/templates/price-sentinel.html"
+      - "price_sentinel_tests/**"
+      - ".github/workflows/price-sentinel.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - run: python -m pip install -r requirements.txt
+      - run: python -m pytest price_sentinel_tests -q
+      - run: node --check changedetectionio/static/js/price-sentinel.js

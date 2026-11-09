@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="csrf-token" content="{{ csrf_token() }}">
+  <meta name="description" content="价格哨兵：自托管的中文商品价格监控工作台。">
+  <title>价格哨兵 · Price Sentinel</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles/price-sentinel.css') }}">
+  <script defer src="{{ url_for('static', filename='js/price-sentinel.js') }}"></script>
+</head>
+<body data-base="{{ url_for('price_sentinel.index') }}">
+  <svg class="icon-library" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
+    <symbol id="i-grid" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="2"/><rect x="14" y="3" width="7" height="7" rx="2"/><rect x="3" y="14" width="7" height="7" rx="2"/><rect x="14" y="14" width="7" height="7" rx="2"/></symbol>
+    <symbol id="i-trend" viewBox="0 0 24 24"><path d="m3 6 7 7 4-4 7 9M15 18h6v-6"/></symbol>
+    <symbol id="i-bell" viewBox="0 0 24 24"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4"/></symbol>
+    <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+    <symbol id="i-refresh" viewBox="0 0 24 24"><path d="M20 7a9 9 0 1 0 1 8M20 3v5h-5"/></symbol>
+    <symbol id="i-search" viewBox="0 0 24 24"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 5 5"/></symbol>
+    <symbol id="i-arrow" viewBox="0 0 24 24"><path d="M5 12h14m-6-6 6 6-6 6"/></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24"><path d="m5 12 4 4L19 6"/></symbol>
+    <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></symbol>
+    <symbol id="i-link" viewBox="0 0 24 24"><path d="m10 13 4-4M8 16l-1 1a4 4 0 0 1-6-6l5-5a4 4 0 0 1 6 0M16 8l1-1a4 4 0 0 1 6 6l-5 5a4 4 0 0 1-6 0" transform="translate(1 1) scale(.9)"/></symbol>
+  </svg>
+  <aside class="sidebar">
+    <a class="brand" href="{{ url_for('price_sentinel.index') }}"><span class="brand-icon"><svg><use href="#i-trend"/></svg></span><span>价格哨兵<small>PRICE SENTINEL</small></span></a>
+    <div class="nav-label">工作空间</div>
+    <a class="nav-item active" href="{{ url_for('price_sentinel.index') }}"><svg><use href="#i-grid"/></svg>监控总览<span class="nav-count" id="nav-count">0</span></a>
+    <button class="nav-item" id="show-help"><svg><use href="#i-bell"/></svg>提醒与通知</button>
+    <a class="nav-item" href="{{ url_for('watchlist.index') }}"><svg><use href="#i-link"/></svg>采集引擎设置<span class="out-arrow">↗</span></a>
+    <div class="sidebar-note"><span class="note-orbit">◎</span><strong>少刷一次，多一点专注。</strong><p>把价格变化交给哨兵，<br>把时间留给真正重要的事。</p></div>
+    <div class="sidebar-bottom"><span class="live-dot"></span>自托管 · 本地持久化<small>Powered by changedetection.io</small></div>
+  </aside>
+  <main>
+    <header class="topbar"><span>工作空间 <b>/</b> 价格监控</span><div><a href="?demo=1" id="demo-link">查看演示</a><span class="version">个人版 v1.0</span></div></header>
+    <div class="page-content">
+      <section class="page-heading"><div><div class="eyebrow">KEEP AN EYE ON WHAT MATTERS</div><h1>好价格，值得被看见<span>。</span></h1><p>关注商品，记录变化，在合适的价格收到提醒。</p></div><button class="button primary" data-open-add><svg><use href="#i-plus"/></svg>添加商品</button></section>
+      <div id="demo-banner" class="notice demo-notice" hidden>当前为界面演示，商品和价格均为示例，不会创建监控或发送通知。<a href="{{ url_for('price_sentinel.index') }}">返回真实工作台 →</a></div>
+      <div id="connection-error" class="notice error-notice" role="alert" hidden></div>
+      <section class="stats" aria-label="监控概览">
+        <article class="stat"><div class="stat-top">关注中的商品<svg><use href="#i-grid"/></svg></div><div class="stat-number" id="stat-total">—</div><div class="stat-detail"><span class="live-dot"></span><span id="stat-active">正在读取监控状态</span></div></article>
+        <article class="stat"><div class="stat-top">最近一次变动降价<svg><use href="#i-trend"/></svg></div><div class="stat-number green" id="stat-down">—</div><div class="stat-detail">相较上次变价前的有效价格</div></article>
+        <article class="stat"><div class="stat-top">低于目标价<svg><use href="#i-check"/></svg></div><div class="stat-number" id="stat-target">—</div><div class="stat-detail">价格已到位，库存未显示缺货</div></article>
+        <article class="stat"><div class="stat-top">需要关注<svg><use href="#i-clock"/></svg></div><div class="stat-number" id="stat-errors">—</div><div class="stat-detail">采集异常与访问失败</div></article>
+      </section>
+      <section class="workspace-grid">
+        <div class="panel products-panel"><div class="panel-heading"><div><h2>我的关注 <span id="product-count">0</span></h2><p>固定规格，才有可比较的价格。</p></div><button class="icon-button" id="refresh" aria-label="刷新监控数据"><svg><use href="#i-refresh"/></svg></button></div>
+          <div class="toolbar"><div class="tabs" role="group" aria-label="筛选商品"><button class="tab active" data-filter="all">全部商品</button><button class="tab" data-filter="down">降价中</button><button class="tab" data-filter="target">已到目标</button><button class="tab" data-filter="error">异常</button></div><label class="search"><svg><use href="#i-search"/></svg><input id="search" type="search" placeholder="搜索商品或链接" aria-label="搜索商品"></label></div>
+          <div class="table-wrap"><table><thead><tr><th>商品 / 固定规格</th><th>当前价格</th><th>最近变动</th><th>状态</th></tr></thead><tbody id="products"></tbody></table></div>
+          <div id="empty-state" class="empty-state" hidden><span class="empty-icon"><svg><use href="#i-trend"/></svg></span><h3>你的第一份好价清单，从这里开始</h3><p>粘贴一个商品链接，设置期待的价格。<br>价格变化时，让哨兵替你留意。</p><button class="button primary" data-open-add>添加第一个商品<svg><use href="#i-arrow"/></svg></button></div>
+          <div id="no-results" class="empty-state compact" hidden><h3>没有匹配的商品</h3><p>试试其他关键词或切换筛选条件。</p></div>
+          <div class="panel-footer"><span><span class="live-dot"></span>每 30 秒刷新工作台，采集间隔按商品单独设置</span><span id="last-update">—</span></div>
+        </div>
+        <aside class="panel detail-panel"><div class="panel-heading"><div><h2>价格轨迹</h2><p id="detail-name">选择商品，查看变化</p></div><span class="tiny-tag">趋势</span></div>
+          <div id="detail-empty" class="detail-empty"><svg><use href="#i-trend"/></svg><p>价格的每一次变化，<br>都值得留下记录。</p></div>
+          <div id="detail-content" hidden><div class="detail-price" id="detail-price">—</div><div class="detail-sub" id="detail-change">等待采集</div><div class="chart-controls" aria-label="历史范围"><button class="range active" data-days="7">7 天</button><button class="range" data-days="30">30 天</button><button class="range" data-days="90">90 天</button><button class="range" data-days="all">全部</button></div><div class="chart" id="chart" aria-live="polite"></div><div class="range-stats"><div>所选快照最低<strong id="history-min">—</strong></div><div>所选快照最高<strong id="history-max">—</strong></div></div><div class="rule-card"><div><span class="rule-icon"><svg><use href="#i-bell"/></svg></span><strong>提醒规则</strong><button id="edit-rule" class="text-button">修改</button></div><p id="detail-rule">—</p></div><p class="error-detail" id="detail-error" hidden></p><div class="detail-actions"><button class="button secondary" id="check-one"><svg><use href="#i-refresh"/></svg>立即检查</button><button class="button secondary" id="pause-one">暂停监控</button></div><div class="detail-links"><a id="open-product" href="#" target="_blank" rel="noopener noreferrer">打开商品 ↗</a><a id="export-history" href="#">导出 CSV ↓</a><button id="delete-one" class="text-button danger">删除</button></div><p class="history-note">仅显示引擎保存的变化快照，最多 500 条。旧快照不含币种，请保持规格、地区与币种一致。</p></div>
+        </aside>
+      </section>
+      <section class="bottom-note"><span>i</span><p>监控的是网页公开标价，不自动计入会员价、优惠券、运费或结算优惠。首次采集建立基线，提醒由后续变化触发。</p></section>
+      <footer class="page-footer"><span>PRICE SENTINEL</span><span>看清变化，从容选择。</span></footer>
+    </div>
+  </main>
+  <dialog id="product-dialog"><form id="product-form"><div class="modal-heading"><div><span class="eyebrow">NEW WATCH</span><h2>把好价格，加入关注。</h2></div><button type="button" class="close-button" data-close aria-label="关闭">×</button></div><label class="field">商品链接<input name="url" type="url" required maxlength="4096" placeholder="https://example.com/product"></label><label class="field">商品名称与固定规格<input name="title" maxlength="200" placeholder="例如：耳机 / 黑色 / 标准版"></label><div class="form-grid"><label class="field">检查间隔<select name="interval_minutes"><option value="5">每 5 分钟</option><option value="15" selected>每 15 分钟</option><option value="30">每 30 分钟</option><option value="60">每 1 小时</option><option value="360">每 6 小时</option></select></label><label class="field">采集方式<select name="fetch_backend"><option value="html_requests">普通网页</option><option value="html_webdriver">浏览器渲染（需配置）</option></select></label></div><label class="field">什么时候提醒<select name="alert_mode"><option value="all">价格变化或恢复有货</option><option value="target">低于目标价，或恢复有货</option><option value="percentage">波动超过阈值，或恢复有货</option></select></label><label class="field target-field" hidden>目标价格（商品页面币种）<input name="target_price" type="number" min="0.000001" step="any" placeholder="例如：1999"></label><label class="field percentage-field" hidden>相较上次有效价格，波动超过（%）<input name="change_percent" type="number" min="0.000001" max="100" step="any" placeholder="例如：10"></label><div class="form-note">通知渠道沿用采集引擎的全局设置。动态网页选择浏览器渲染前，请先在引擎中配置浏览器；页面缺少可识别商品价格时，需单独适配。</div><p class="form-error" role="alert" hidden></p><div class="modal-actions"><button type="button" class="button secondary" data-close>取消</button><button type="submit" class="button primary">开始关注<svg><use href="#i-arrow"/></svg></button></div></form></dialog>
+  <dialog id="rule-dialog"><form id="rule-form"><div class="modal-heading"><h2>修改提醒规则</h2><button type="button" class="close-button" data-close aria-label="关闭">×</button></div><label class="field">提醒方式<select name="alert_mode"><option value="all">价格变化或恢复有货</option><option value="target">低于目标价，或恢复有货</option><option value="percentage">波动超过阈值，或恢复有货</option></select></label><label class="field target-field" hidden>目标价格（商品页面币种）<input name="target_price" type="number" min="0.000001" step="any"></label><label class="field percentage-field" hidden>相较上次有效价格，波动超过（%）<input name="change_percent" type="number" min="0.000001" max="100" step="any"></label><p class="form-error" role="alert" hidden></p><div class="modal-actions"><button type="button" class="button secondary" data-close>取消</button><button type="submit" class="button primary">保存规则</button></div></form></dialog>
+  <dialog id="help-dialog"><div class="modal-heading"><h2>让提醒，真正到达你。</h2><button class="close-button" data-close aria-label="关闭">×</button></div><div class="help-content"><p>采集与通知由 changedetection.io 原引擎执行，工作台不会额外启动第二套调度器。</p><ol><li>进入采集引擎的“设置 → 通知”，配置并测试邮件、Webhook 或其他支持的渠道。</li><li>添加商品时选择价格规则，恢复有货提醒默认启用。</li><li>首次采集用于建立基线；后续价格变化按规则触发，价格保持不变时不重复发送价格提醒。</li></ol><p>异常页面与提取失败展示为采集异常，不以 0 元代替。通知投递结果请在原引擎中检查。</p><a class="button primary" href="{{ url_for('watchlist.index') }}">进入采集引擎<svg><use href="#i-arrow"/></svg></a></div></dialog>
+  <dialog id="delete-dialog"><div class="modal-heading"><h2>移除这个关注？</h2><button class="close-button" data-close aria-label="关闭">×</button></div><p>对应监控及历史记录将一并删除。其他商品不受影响。</p><div class="modal-actions"><button class="button secondary" data-close>保留</button><button id="confirm-delete" class="button destructive">确认删除</button></div></dialog>
+  <div id="toast" class="toast" role="status" hidden></div>
+</body>
+</html>

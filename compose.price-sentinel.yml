@@ -1,0 +1,20 @@
+services:
+  price-sentinel:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        PYTHON_VERSION: "3.12"
+    image: price-sentinel:local
+    container_name: price-sentinel
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:5080:5000"
+    volumes:
+      - price_sentinel_data:/datastore
+    environment:
+      TZ: Asia/Shanghai
+      PYTHONUNBUFFERED: "1"
+
+volumes:
+  price_sentinel_data:
